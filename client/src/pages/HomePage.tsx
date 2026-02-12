@@ -13,13 +13,21 @@ interface WeatherData {
   wind_direction_10m: number;
 }
 
+interface Message {
+  city: string;
+  body: string;
+  sender: string;
+  timestamp: string;
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const { socket, connected } = useSocket();
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [msgInput, setMsgInput] = useState("");
 
-  // Listen for weather updates
   useEffect(() => {
     if (!socket) return;
 
@@ -27,8 +35,13 @@ export default function HomePage() {
       setWeather(data);
     });
 
+    socket.on("new_message", (msg: Message) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
     return () => {
       socket.off("weather_update");
+      socket.off("new_message");
     };
   }, [socket]);
 
@@ -41,6 +54,13 @@ export default function HomePage() {
     socket.emit("join", city);
     setSelectedCity(city);
     setWeather(null);
+    setMessages([]);
+  }
+
+  function handleSendMessage() {
+    if (!socket || !selectedCity || !msgInput.trim()) return;
+    socket.emit("send_message", { city: selectedCity, body: msgInput });
+    setMsgInput("");
   }
 
   async function handleLogout() {
@@ -105,6 +125,43 @@ export default function HomePage() {
           ) : (
             <p className="text-gray-400">Waiting for weather data...</p>
           )}
+
+          {/* Chat */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-3">Chat</h3>
+            <div className="bg-gray-700 rounded-lg p-4 h-48 overflow-y-auto mb-3 flex flex-col gap-2">
+              {messages.length === 0 ? (
+                <p className="text-gray-400 text-sm">No messages yet</p>
+              ) : (
+                messages.map((msg, i) => (
+                  <div key={i} className="text-sm">
+                    <span className="text-blue-400 font-medium">{msg.sender}</span>
+                    <span className="text-gray-500 text-xs ml-2">
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </span>
+                    <p className="text-gray-200">{msg.body}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={msgInput}
+                onChange={(e) => setMsgInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                placeholder="Type a message..."
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 outline-none"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!msgInput.trim()}
+                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
+              >
+                Send
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

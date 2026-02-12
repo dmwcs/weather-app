@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
@@ -8,17 +9,28 @@ export function useSocket() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const s = io(SERVER_URL);
+    let s: Socket;
 
-    s.on("connect", () => {
-      setSocket(s);
-      setConnected(true);
-    });
+    async function connect() {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
 
-    s.on("disconnect", () => setConnected(false));
+      s = io(SERVER_URL, {
+        auth: { token },
+      });
+
+      s.on("connect", () => {
+        setSocket(s);
+        setConnected(true);
+      });
+
+      s.on("disconnect", () => setConnected(false));
+    }
+
+    connect();
 
     return () => {
-      s.disconnect();
+      if (s) s.disconnect();
     };
   }, []);
 
