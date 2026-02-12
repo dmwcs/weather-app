@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
+import { setupSocket } from "./socket/handler";
 
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
+
+setupSocket(io);
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
