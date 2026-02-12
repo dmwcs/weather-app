@@ -1,11 +1,18 @@
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { Request, Response, NextFunction } from "express";
 
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: process.env.COGNITO_USER_POOL_ID!,
-  clientId: process.env.COGNITO_CLIENT_ID!,
-  tokenUse: "id",
-});
+let verifier: ReturnType<typeof CognitoJwtVerifier.create>;
+
+function getVerifier() {
+  if (!verifier) {
+    verifier = CognitoJwtVerifier.create({
+      userPoolId: process.env.COGNITO_USER_POOL_ID!,
+      clientId: process.env.COGNITO_CLIENT_ID!,
+      tokenUse: "id",
+    });
+  }
+  return verifier;
+}
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.replace("Bearer ", "");
@@ -16,7 +23,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    const payload = await verifier.verify(token);
+    const payload = await getVerifier().verify(token);
     (req as any).user = payload;
     next();
   } catch {
