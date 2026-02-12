@@ -8,10 +8,14 @@ output "cognito_client_id" {
   value = aws_cognito_user_pool_client.react_app.id
 }
 
-output "cognito_region" {
-  value = var.aws_region
+output "cloudfront_domain" {
+  value = aws_cloudfront_distribution.main.domain_name
 }
 
-output "ecr_repo_url" {
-  value = aws_ecr_repository.app.repository_url
+output "s3_bucket" {
+  value = aws_s3_bucket.frontend.id
+}
+
+output "ec2_public_ip" {
+  value = aws_eip.backend.public_ip
 }
