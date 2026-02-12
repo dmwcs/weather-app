@@ -3,7 +3,7 @@ import { CITIES } from "../config/cities";
 
 const POLL_INTERVAL = 60_000; // 60 seconds
 
-async function fetchWeather(lat: number, lon: number) {
+export async function fetchWeather(lat: number, lon: number) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m`;
   const res = await fetch(url);
   const data = await res.json();
