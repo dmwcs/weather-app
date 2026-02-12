@@ -5,7 +5,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { setupSocket } from "./socket/handler";
 import { startWeatherPoller } from "./services/weatherPoller";
-import { createMessageRouter } from "./routes/messages";
 
 dotenv.config();
 
@@ -22,7 +21,6 @@ const PORT = process.env.PORT || 3001;
 
 setupSocket(io);
 startWeatherPoller(io);
-app.use("/api/messages", createMessageRouter(io));
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
